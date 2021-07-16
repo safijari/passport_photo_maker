@@ -1,0 +1,31 @@
+<label>Image File:</label><br/>
+<input type="file" id="imageLoader" name="imageLoader"/>
+<canvas id="imageCanvas"></canvas>
+
+<script>
+var imageLoader = document.getElementById('imageLoader');
+    imageLoader.addEventListener('change', handleImage, false);
+var canvas = document.getElementById('imageCanvas');
+var ctx = canvas.getContext('2d');
+
+
+function handleImage(e){
+    var reader = new FileReader();
+    reader.onload = function(event){
+        var img = new Image();
+        img.onload = function(){
+            canvas.width = 1800;
+            canvas.height = 1200;
+	    for (var i = 0; i < 3; i++) {
+		for (var j = 0; j < 2; j++) {
+		    x = i*600;
+		    y = j*600
+		    ctx.drawImage(img,x, y, 600,600);
+		}
+	    }
+        }
+        img.src = event.target.result;
+    }
+    reader.readAsDataURL(e.target.files[0]);     
+}
+</script>
