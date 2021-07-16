@@ -1,31 +1,42 @@
-<label>Image File:</label><br/>
+<p>Use button below to upload image, then right click the result and save it to disk<p>
 <input type="file" id="imageLoader" name="imageLoader"/>
-<canvas id="imageCanvas"></canvas>
+<p/>
+<img height="50%" id="final"/>
 
 <script>
 var imageLoader = document.getElementById('imageLoader');
+var button = document.getElementById('btn-download');
     imageLoader.addEventListener('change', handleImage, false);
-var canvas = document.getElementById('imageCanvas');
-var ctx = canvas.getContext('2d');
+// var canvas_small = document.getElementById('imageCanvas');
+// var ctx_small = canvas_small.getContext('2d');
+var image = document.getElementById("final")
 
+var canvas = document.createElement('canvas');
+
+canvas.width = 1800;
+canvas.height = 1200;
+
+var ctx = canvas.getContext('2d');
 
 function handleImage(e){
     var reader = new FileReader();
     reader.onload = function(event){
         var img = new Image();
         img.onload = function(){
-            canvas.width = 1800;
-            canvas.height = 1200;
 	    for (var i = 0; i < 3; i++) {
 		for (var j = 0; j < 2; j++) {
 		    x = i*600;
 		    y = j*600
-		    ctx.drawImage(img,x, y, 600,600);
+		    ctx.drawImage(img,x, y, 600, 600);
+		    // ctx_small.drawImage(img,i*200, j*200, 200, 200);
 		}
 	    }
+	    var dataURL = canvas.toDataURL('image/png');
+	    image.src = dataURL;
         }
         img.src = event.target.result;
     }
-    reader.readAsDataURL(e.target.files[0]);     
+    reader.readAsDataURL(e.target.files[0]);
+
 }
 </script>
