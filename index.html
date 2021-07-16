@@ -1,9 +1,123 @@
 <p>Use button below to upload image, then right click the result and save it to disk<p>
 <input type="file" id="imageLoader" name="imageLoader"/>
 <p/>
-<img height="50%" id="final"/>
+<figure>
+  <img src="" id="myImage" height="200"/>
+  <figcaption>Uploaded Image</figcaption>
+</figure>
+
+<figure>
+  <img src="" id="faceImage" height="200"/>
+  <figcaption>Cropped Image</figcaption>
+</figure>
+
+<p/>
+
+<figure>
+  <img height="50%" id="final"/>
+  <figcaption>Final Result</figcaption>
+</figure>
+
+<script type="text/javascript" src="./face-api.js"></script>
 
 <script>
+
+// function drawFaceLandmarks(canvasArg, faceLandmarks) {
+//       var faceLandmarksArray = Array.isArray(faceLandmarks) ? faceLandmarks : [faceLandmarks];
+//       faceLandmarksArray.forEach(function (f) {
+//           var landmarks = f instanceof FaceLandmarks
+//               ? f
+//               : (isWithFaceLandmarks(f) ? f.landmarks : undefined);
+//           if (!landmarks) {
+//               throw new Error('drawFaceLandmarks - expected faceExpressions to be FaceLandmarks | WithFaceLandmarks<WithFaceDetection<{}>> or array thereof');
+//           }
+//           new DrawFaceLandmarks(landmarks).draw(canvasArg);
+//       });
+//   }
+
+const MODEL_URL = '/models';
+let process = (async () => {
+    var canvas = document.createElement('canvas');
+
+    await faceapi.loadSsdMobilenetv1Model(MODEL_URL);
+    await faceapi.loadFaceLandmarkModel(MODEL_URL);
+
+    const input = document.getElementById('myImage');
+    console.log("running?");
+    let fullFaceDescriptions = await faceapi.detectAllFaces(input).withFaceLandmarks();
+    console.log("ran?");
+    console.log(fullFaceDescriptions);
+    var ctx = canvas.getContext('2d');
+
+    var x1 = 10000000000000;
+    var x2 = 0;
+    var y1 = 100000000000000000000;
+    var y2 = 0;
+
+    let lm = fullFaceDescriptions[0].landmarks;
+    
+    for (var i = 0; i < lm.positions.length; i++) {
+	if (lm.positions[i].x < x1) {
+	    x1 = lm.positions[i].x;
+	}
+	if (lm.positions[i].x > x2) {
+	    x2 = lm.positions[i].x;
+	}
+	if (lm.positions[i].y < y1) {
+	    y1 = lm.positions[i].y;
+	}
+	if (lm.positions[i].y > y2) {
+	    y2 = lm.positions[i].y;
+	}
+    }
+    console.log(x1);
+    console.log(x2);
+    console.log(y1);
+    console.log(y2);
+    x1 = Math.trunc(x1);
+    y1 = Math.trunc(y1);
+    x2 = Math.trunc(x2);
+    y2 = Math.trunc(y2);
+    var w = x2 - x1;
+    var h = y2 - y1;
+
+    var cx = Math.trunc(x1 + w/2);
+    var cy = Math.trunc(y1 + h/2);
+
+    s = Math.trunc(h*1.2);
+
+    x1 = cx - s;
+    y1 = cy - s;
+    w = s*2;
+    h = s*2;
+
+    canvas.width=w;
+    canvas.height=h;
+    ctx.drawImage(input, x1, y1, w, h, 0, 0, w, h);
+
+    var faceimage = document.getElementById("faceImage");
+    faceimage.src = canvas.toDataURL('image/png');
+    faceimage.onload = () => {
+	var canvas = document.createElement('canvas');
+	canvas.width = 1800;
+	canvas.height = 1200;
+	var ctx = canvas.getContext('2d');
+	var image = document.getElementById("final")
+	for (var i = 0; i < 3; i++) {
+	    for (var j = 0; j < 2; j++) {
+		x = i*600;
+		y = j*600
+		ctx.drawImage(faceimage,x, y, 600, 600);
+		// ctx_small.drawImage(img,i*200, j*200, 200, 200);
+	    }
+	}
+	var dataURL = canvas.toDataURL('image/png');
+	image.src = dataURL;
+    };
+});
+
+console.log("whee?")
+
 var imageLoader = document.getElementById('imageLoader');
 var button = document.getElementById('btn-download');
     imageLoader.addEventListener('change', handleImage, false);
@@ -20,23 +134,34 @@ var ctx = canvas.getContext('2d');
 
 function handleImage(e){
     var reader = new FileReader();
+    const img = document.getElementById('myImage');
     reader.onload = function(event){
-        var img = new Image();
-        img.onload = function(){
-	    for (var i = 0; i < 3; i++) {
-		for (var j = 0; j < 2; j++) {
-		    x = i*600;
-		    y = j*600
-		    ctx.drawImage(img,x, y, 600, 600);
-		    // ctx_small.drawImage(img,i*200, j*200, 200, 200);
-		}
-	    }
-	    var dataURL = canvas.toDataURL('image/png');
-	    image.src = dataURL;
-        }
         img.src = event.target.result;
     }
     reader.readAsDataURL(e.target.files[0]);
-
+    process();
 }
+
+// function handleImage(e){
+//     var reader = new FileReader();
+//     reader.onload = function(event){
+//         var img = new Image();
+//         img.onload = function(){
+// 	    for (var i = 0; i < 3; i++) {
+// 		for (var j = 0; j < 2; j++) {
+// 		    x = i*600;
+// 		    y = j*600
+// 		    ctx.drawImage(img,x, y, 600, 600);
+// 		    // ctx_small.drawImage(img,i*200, j*200, 200, 200);
+// 		}
+// 	    }
+// 	    var dataURL = canvas.toDataURL('image/png');
+// 	    image.src = dataURL;
+//         }
+//         img.src = event.target.result;
+//     }
+//     reader.readAsDataURL(e.target.files[0]);
+
+// }
+
 </script>
